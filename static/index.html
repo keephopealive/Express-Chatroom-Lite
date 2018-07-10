@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+    <script>
+        $(document).ready(function(){
+            const socket = io();
+            
+            var name;
+            while(!name){
+                name = prompt('Please enter your name');
+            }
+
+            socket.emit('new_user', { name: name});
+
+            socket.on('update_user_list', function(data){
+                console.log('update_user_list - invoked by server, user_list: ', data);
+                $("#userlist").html('');
+                for(var idx=0; idx< data.user_list.length; idx++){
+                    console.log(idx);
+                    $("#userlist").append(`<h5>${data['user_list'][idx]['user_name']}</h5>`)
+                }
+            })
+
+            $("#new_message").submit(function(){
+                var msg = $("#message").val();
+                console.log(msg);
+                socket.emit('new_message', { msg: msg})
+                return false;
+            })
+
+            socket.on('receive_message', function(data){
+                $("#messages").prepend(`<p>${data.user_name}: ${data.msg}</p>`)
+            })
+
+            socket.on('message_history', function(data){
+                for(var idx=0; idx< data.message_list.length; idx++){
+                    $("#messages").prepend(`<p>${data.message_list[idx].user_name}: ${data.message_list[idx].msg}</p>`)
+                }
+            })
+
+
+        })
+    </script>
+    <title>Document</title>
+</head>
+<body>
+    <h1>Sockets!</h1>
+    <form id="new_message">
+        <input type="text" id="message">
+        <input type="submit">
+    </form>
+    <div id="messages"></div>
+    <div id="userlist"></div>
+</body>
+</html>
